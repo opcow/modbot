@@ -1,0 +1,4 @@
+*.cfg
+*.so
+modbot
+package.sh

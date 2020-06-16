@@ -21,6 +21,8 @@ Config file `reactbot.cfg` example:
     regex = false
 
     [[search]]
-    text = "<@!123456789012345678>" # user mention react
+    text = "<@!123456789012345678>" # user mention reaction
     reaction = ["🧜‍♀️", "🛵"]
     regex = false
+
+---

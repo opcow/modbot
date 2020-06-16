@@ -105,7 +105,7 @@ func readConfig() {
 func (b bot) BotInit(s []string) {
 	var err error
 	readConfig()
-	reportCron = cron.New()
+	reportCron = cron.New(cron.WithParser(cron.NewParser(cron.Minute | cron.Hour)))
 	_, err = reportCron.AddFunc(cronSpec, cronReport)
 	if err == nil {
 		reportCron.Start()

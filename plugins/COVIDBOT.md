@@ -13,3 +13,5 @@ Config file `covidbot.cfg` example:
     TOKEN = "<rapidapitokenhere>"                        # your rapidapi token
     CHANS = ["000000000000000000", "123456789123456789"] # IDs of channels the bot will opertate in
     CRONSPEC = "1 * * * *"                               # cronspec for periodic reports
+
+---

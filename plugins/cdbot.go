@@ -11,9 +11,11 @@ import (
 )
 
 var (
-	lastCD time.Time
-	start  = make(chan int)
-	quit   = make(chan bool)
+	lastCD    time.Time
+	start     = make(chan int)
+	quit      = make(chan bool)
+	defaultCD = 5
+	maxCD     = 5
 
 	seed = rand.NewSource(time.Now().Unix())
 	rnd  = rand.New(seed)
@@ -32,6 +34,29 @@ type bot string
 var Bot bot
 
 func (b bot) BotInit(s []string) {
+
+	if len(s) > 1 {
+		_, err := fmt.Sscanf(s[1], "%v", &defaultCD)
+		if err != nil {
+			fmt.Printf("cdbot: error parsing default CD: %s\n", err)
+		} else {
+			fmt.Printf("cdbot: default CD is %v.\n", defaultCD)
+		}
+	}
+	if len(s) > 2 {
+		_, err := fmt.Sscanf(s[2], "%v", &maxCD)
+		if err != nil {
+			fmt.Printf("cdbot: error parsing max CD: %s\n", err)
+		} else {
+			fmt.Printf("cdbot: max CD is %v.\n", maxCD)
+		}
+		if maxCD < 0 {
+			maxCD = -maxCD
+		}
+		if defaultCD > maxCD {
+			defaultCD = maxCD
+		}
+	}
 	// Tell disgobot where to pass messages for processing
 	disgobot.AddMessageProc(messageProc)
 }
@@ -40,7 +65,6 @@ func (b bot) BotExit() {
 }
 
 func messageProc(m *discordgo.MessageCreate, msg []string) {
-
 	if msg[0] == "!cd" {
 		if len(msg) > 1 {
 			var count int
@@ -51,14 +75,14 @@ func messageProc(m *discordgo.MessageCreate, msg []string) {
 			} else if count == 0 {
 				disgobot.Discord.ChannelMessageSend(m.ChannelID, "You in a hurry?")
 			} else {
-				if count < -5 || count > 5 {
-					disgobot.Discord.ChannelMessageSend(m.ChannelID, "The count must be a number from 1 to 5 (defaults to 5).")
+				if count < -maxCD || count > maxCD {
+					disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("The count must be a number from 1 to %v (defaults to %v).", maxCD, defaultCD))
 				} else {
 					printer(m.ChannelID, count)
 				}
 			}
 		} else {
-			printer(m.ChannelID, 5)
+			printer(m.ChannelID, defaultCD)
 		}
 	}
 }
@@ -72,10 +96,11 @@ func printer(ChannelID string, n int) {
 			if n == 0 {
 				break
 			}
-			disgobot.Discord.ChannelMessageSend(ChannelID, strconv.Itoa(n))
 			if n < 0 {
+				disgobot.Discord.ChannelMessageSend(ChannelID, fmt.Sprintf("T-minus %v", n))
 				n++
 			} else {
+				disgobot.Discord.ChannelMessageSend(ChannelID, strconv.Itoa(n))
 				n--
 			}
 		}

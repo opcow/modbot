@@ -46,11 +46,6 @@ var (
 	sc chan os.Signal
 )
 
-// func getEnv() {
-// 	*dToken = os.Getenv("DISCORDTOKEN")
-// 	*operators = os.Getenv("TBOPS")
-// }
-
 func readConfig() {
 	var tomlData []byte
 	var err error
