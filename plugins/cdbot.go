@@ -97,7 +97,7 @@ func printer(ChannelID string, n int) {
 				break
 			}
 			if n < 0 {
-				disgobot.Discord.ChannelMessageSend(ChannelID, fmt.Sprintf("T-minus %v seconds...", n))
+				disgobot.Discord.ChannelMessageSend(ChannelID, fmt.Sprintf("T-minus %v seconds...", -n))
 				n++
 			} else {
 				disgobot.Discord.ChannelMessageSend(ChannelID, strconv.Itoa(n))
