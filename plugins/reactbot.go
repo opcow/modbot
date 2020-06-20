@@ -41,7 +41,7 @@ var (
 	}
 
 	conf        searches
-	reacts      = make(map[int]reactSpec)
+	reacts      []reactSpec
 	doReactions bool
 )
 
@@ -53,9 +53,10 @@ func readConfig() {
 	tomlData, err := ioutil.ReadFile("plugins/reactbot.cfg") // just pass the file name
 	if err == nil {
 		if _, err := toml.Decode(string(tomlData), &conf); err == nil {
+			reacts = nil
 			doReactions = conf.React
 			var spec reactSpec
-			for i, r := range conf.Search {
+			for _, r := range conf.Search {
 				spec.Channels = make(map[string]struct{})
 				for _, c := range r.Channels {
 					spec.Channels[c] = struct{}{}
@@ -63,7 +64,7 @@ func readConfig() {
 				spec.Search = r.Text
 				spec.Reaction = r.Reaction
 				spec.Regex = r.Regex
-				reacts[i] = spec
+				reacts = append(reacts, spec)
 			}
 		}
 	}
