@@ -1,7 +1,7 @@
 #!/bin/bash
 cd plugins
-go build -v -buildmode=plugin ./cdbot.go
-go build -v -buildmode=plugin ./covidbot.go
-go build -v -buildmode=plugin ./reactbot.go
-go build -v -buildmode=plugin ./pongbot.go
+go build -buildmode=plugin ./cdbot.go
+go build -buildmode=plugin ./covidbot.go
+go build -buildmode=plugin ./reactbot.go
+go build -buildmode=plugin ./pongbot.go
 cd ..
