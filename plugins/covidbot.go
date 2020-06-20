@@ -22,6 +22,7 @@ type Config struct {
 }
 
 var (
+	botName      = "covidbot"
 	conf         Config
 	seed         = rand.NewSource(time.Now().Unix())
 	rnd          = rand.New(seed)
@@ -90,15 +91,20 @@ type bot string
 var Bot bot
 
 func readConfig() {
+	fmt.Printf("%s: loading %s...\n", botName, "plugins/covidbot.cfg")
 	tomlData, err := ioutil.ReadFile("plugins/covidbot.cfg") // just pass the file name
-	if err == nil {
-		if _, err := toml.Decode(string(tomlData), &conf); err == nil {
-			token = conf.Token
-			cronSpec = conf.Cronspec
-			for _, c := range conf.Chans {
-				covChans[c] = struct{}{}
-			}
+	if err != nil {
+		fmt.Printf("%s: error: %s", botName, err)
+		return
+	}
+	if _, err := toml.Decode(string(tomlData), &conf); err == nil {
+		token = conf.Token
+		cronSpec = conf.Cronspec
+		for _, c := range conf.Chans {
+			covChans[c] = struct{}{}
 		}
+	} else {
+		fmt.Printf("%s: error: %s", botName, err)
 	}
 }
 
