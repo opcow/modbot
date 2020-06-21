@@ -2,3 +2,4 @@
 *.so
 modbot
 package.sh
+deploy.sh
