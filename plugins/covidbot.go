@@ -15,38 +15,6 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-type Config struct {
-	Token    string
-	Chans    []string
-	Cronspec string
-}
-
-var (
-	botName      = "covidbot"
-	conf         Config
-	seed         = rand.NewSource(time.Now().Unix())
-	rnd          = rand.New(seed)
-	token        string
-	initialChans string
-	cronSpec     = "* 1 * * * *"
-	// cronEntryID  cron.EntryID
-	lastReport time.Time
-
-	covChans   = make(map[string]struct{})
-	reportCron *cron.Cron
-
-	nfStrings = []string{
-		"Must be a shithole.",
-		"Perhaps they're all dead.",
-		"How about a nice game of TIC-TAC-TOE?",
-		"Thanks, Hillary.",
-		"Try not spelling like the president.",
-		"I felt a great disturbance in the force. Coincidence?",
-		"Maybe it's fictional. Like Finland.",
-		"Maybe you could discover it.",
-	}
-)
-
 type tests struct {
 	Total int `json:"total"`
 }
@@ -85,17 +53,49 @@ type covidReport struct {
 	Response   []response `json:"response"`
 }
 
+type Config struct {
+	Token    string
+	Chans    []string
+	Cronspec string
+}
+
 type bot string
+
+var (
+	botName      = "covidbot"
+	conf         Config
+	seed         = rand.NewSource(time.Now().Unix())
+	rnd          = rand.New(seed)
+	token        string
+	initialChans string
+	cronSpec     = "* 1 * * * *"
+	// cronEntryID  cron.EntryID
+	lastReport time.Time
+
+	covChans   = make(map[string]struct{})
+	reportCron *cron.Cron
+
+	nfStrings = []string{
+		"Must be a shithole.",
+		"Perhaps they're all dead.",
+		"How about a nice game of TIC-TAC-TOE?",
+		"Thanks, Hillary.",
+		"Try not spelling like the president.",
+		"I felt a great disturbance in the force. Coincidence?",
+		"Maybe it's fictional. Like Finland.",
+		"Maybe you could discover it.",
+	}
+)
 
 // Bot is the exported bot
 var Bot bot
 
-func readConfig() {
+func readConfig() error {
 	fmt.Printf("%s: loading %s...\n", botName, "plugins/covidbot.cfg")
 	tomlData, err := ioutil.ReadFile("plugins/covidbot.cfg") // just pass the file name
 	if err != nil {
 		fmt.Printf("%s: error: %s", botName, err)
-		return
+		return err
 	}
 	if _, err := toml.Decode(string(tomlData), &conf); err == nil {
 		token = conf.Token
@@ -106,17 +106,24 @@ func readConfig() {
 	} else {
 		fmt.Printf("%s: error: %s", botName, err)
 	}
+	return err
 }
 
 func (b bot) BotInit(s []string) {
 	var err error
-	readConfig()
+	if err = readConfig(); err != nil {
+		return
+	}
+	if token == "" {
+		fmt.Printf("%s: disabled due to empty token string.", botName)
+		return
+	}
 	reportCron = cron.New(cron.WithParser(cron.NewParser(cron.Minute | cron.Hour)))
 	_, err = reportCron.AddFunc(cronSpec, cronReport)
 	if err == nil {
 		reportCron.Start()
 	} else {
-		fmt.Println(err)
+		fmt.Printf("%s: error: %s", botName, err)
 	}
 	fmt.Printf("Cronspec is %s\n", cronSpec)
 
@@ -132,9 +139,6 @@ func (b bot) BotExit() {
 func messageCreate(m *discordgo.MessageCreate, msg []string) {
 	switch msg[0] {
 	case "!cov": // report covid-19 stats
-		if token == "" {
-			return
-		}
 		if time.Now().Sub(lastReport).Seconds() < 10 {
 			disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Please wait %.0f seconds and try again.", 10.0-time.Now().Sub(lastReport).Seconds()))
 			return
@@ -156,6 +160,7 @@ func messageCreate(m *discordgo.MessageCreate, msg []string) {
 				return
 			}
 			if len(msg) == 1 {
+				// just report the status
 				disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Grim Reaper reports are *on* for %s.", disgobot.ChanIDtoMention(m.ChannelID)))
 				covChans[m.ChannelID] = struct{}{}
 			} else if id, err := disgobot.ChanMentionToID(msg[1]); err == nil {
