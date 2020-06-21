@@ -109,7 +109,9 @@ func messageCreate(m *discordgo.MessageCreate, msg []string) {
 			case "off":
 				doReactions = false
 			case "reload":
-				readConfig()
+				if disgobot.IsOp(m.Author.ID) {
+					readConfig()
+				}
 			}
 		}
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Reactions are %s", onOrOff[doReactions]))
