@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ type covidReport struct {
 	Response   []response `json:"response"`
 }
 
-type Config struct {
+type config struct {
 	Token    string
 	Chans    []string
 	Cronspec string
@@ -66,12 +67,12 @@ var (
 	// Bot is the exported bot
 	Bot          bot
 	botName      = "covidbot"
-	conf         Config
+	conf         config
 	seed         = rand.NewSource(time.Now().Unix())
 	rnd          = rand.New(seed)
 	token        string
 	initialChans string
-	cronSpec     = "* 1 * * * *"
+	cronSpec     = "1 0"
 	// cronEntryID  cron.EntryID
 	lastReport time.Time
 
@@ -90,9 +91,9 @@ var (
 	}
 )
 
-func readConfig() error {
-	fmt.Printf("%s: loading %s...\n", botName, "plugins/covidbot.cfg")
-	tomlData, err := ioutil.ReadFile("plugins/covidbot.cfg") // just pass the file name
+func readConfig(f string) error {
+	fmt.Printf("%s: loading %s...\n", botName, f)
+	tomlData, err := ioutil.ReadFile(f) // just pass the file name
 	if err != nil {
 		fmt.Printf("%s: error: %s", botName, err)
 		return err
@@ -111,7 +112,8 @@ func readConfig() error {
 
 func (b bot) BotInit(s []string) error {
 	var err error
-	if err = readConfig(); err != nil {
+
+	if err = readConfig(path.Join(path.Dir(s[0]), "covidbot.cfg")); err != nil {
 		return err
 	}
 	if token == "" {

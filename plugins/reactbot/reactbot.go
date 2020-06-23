@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"regexp"
 	"strings"
 
@@ -49,8 +50,8 @@ var (
 	doReactions bool
 )
 
-func readConfig() {
-	tomlData, err := ioutil.ReadFile("plugins/reactbot.cfg") // just pass the file name
+func readConfig(f string) {
+	tomlData, err := ioutil.ReadFile(f) // just pass the file name
 	if err == nil {
 		if _, err := toml.Decode(string(tomlData), &conf); err == nil {
 			reacts = nil
@@ -91,7 +92,7 @@ func readConfig() {
 // }
 
 func (b bot) BotInit(s []string) error {
-	readConfig()
+	readConfig(path.Join(path.Dir(s[0]), "reactbot.cfg"))
 	return nil
 }
 
@@ -108,10 +109,10 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 				doReactions = true
 			case "off":
 				doReactions = false
-			case "reload":
-				if disgobot.IsOp(m.Author.ID) {
-					readConfig()
-				}
+				// case "reload":
+				// 	if disgobot.IsOp(m.Author.ID) {
+				// 		readConfig()
+				// 	}
 			}
 		}
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Reactions are %s", onOrOff[doReactions]))

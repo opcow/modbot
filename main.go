@@ -12,14 +12,14 @@ import (
 	"github.com/opcow/disgobot"
 )
 
-type Config struct {
+type config struct {
 	Token   string
 	Plugins []string
 	Ops     []string
 }
 
 var (
-	conf     Config
+	conf     config
 	confFile = flag.String("c", "", "config file")
 
 	onOrOff = map[bool]string{
