@@ -31,7 +31,11 @@ type reactSpec struct {
 	Regex    bool
 }
 
+type bot string
+
 var (
+	// Bot is the exported bot
+	Bot    bot
 	ctx    context.Context
 	cancel context.CancelFunc
 
@@ -44,10 +48,6 @@ var (
 	reacts      []reactSpec
 	doReactions bool
 )
-
-type bot string
-
-var Bot bot
 
 func readConfig() {
 	tomlData, err := ioutil.ReadFile("plugins/reactbot.cfg") // just pass the file name
@@ -90,16 +90,16 @@ func readConfig() {
 // 	w.Flush()
 // }
 
-func (b bot) BotInit(s []string) {
+func (b bot) BotInit(s []string) error {
 	readConfig()
-	disgobot.AddMessageProc(messageCreate)
+	return nil
 }
 
 func (b bot) BotExit() {
 	fmt.Println("ReactBot exiting...")
 }
 
-func messageCreate(m *discordgo.MessageCreate, msg []string) {
+func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 
 	if msg[0] == "!react" {
 		if len(msg) > 1 {
@@ -137,4 +137,5 @@ func messageCreate(m *discordgo.MessageCreate, msg []string) {
 			}
 		}
 	}
+	return false
 }

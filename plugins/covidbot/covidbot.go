@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -62,6 +63,8 @@ type Config struct {
 type bot string
 
 var (
+	// Bot is the exported bot
+	Bot          bot
 	botName      = "covidbot"
 	conf         Config
 	seed         = rand.NewSource(time.Now().Unix())
@@ -87,9 +90,6 @@ var (
 	}
 )
 
-// Bot is the exported bot
-var Bot bot
-
 func readConfig() error {
 	fmt.Printf("%s: loading %s...\n", botName, "plugins/covidbot.cfg")
 	tomlData, err := ioutil.ReadFile("plugins/covidbot.cfg") // just pass the file name
@@ -109,14 +109,14 @@ func readConfig() error {
 	return err
 }
 
-func (b bot) BotInit(s []string) {
+func (b bot) BotInit(s []string) error {
 	var err error
 	if err = readConfig(); err != nil {
-		return
+		return err
 	}
 	if token == "" {
 		fmt.Printf("%s: disabled due to empty token string.", botName)
-		return
+		return errors.New("missing token")
 	}
 	reportCron = cron.New(cron.WithParser(cron.NewParser(cron.Minute | cron.Hour)))
 	_, err = reportCron.AddFunc(cronSpec, cronReport)
@@ -127,7 +127,7 @@ func (b bot) BotInit(s []string) {
 	}
 	fmt.Printf("Cronspec is %s\n", cronSpec)
 
-	disgobot.AddMessageProc(messageCreate)
+	return nil
 }
 
 func (b bot) BotExit() {
@@ -136,12 +136,12 @@ func (b bot) BotExit() {
 	reportCron.Stop()
 }
 
-func messageCreate(m *discordgo.MessageCreate, msg []string) {
+func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	switch msg[0] {
 	case "!cov": // report covid-19 stats
 		if time.Now().Sub(lastReport).Seconds() < 10 {
 			disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Please wait %.0f seconds and try again.", 10.0-time.Now().Sub(lastReport).Seconds()))
-			return
+			return false
 		}
 		var err error
 		var report string
@@ -157,7 +157,7 @@ func messageCreate(m *discordgo.MessageCreate, msg []string) {
 	case "!reaper": // periodic USA death toll reports
 		if len(msg) < 2 || msg[1] != "off" {
 			if !disgobot.IsOp(m.Author.ID) {
-				return
+				return false
 			}
 			if len(msg) == 1 {
 				// just report the status
@@ -176,11 +176,11 @@ func messageCreate(m *discordgo.MessageCreate, msg []string) {
 		}
 	case "!covchans":
 		if !disgobot.IsOp(m.Author.ID) {
-			return
+			return false
 		}
 		c, err := disgobot.Discord.UserChannelCreate(m.Author.ID)
 		if err != nil {
-			return
+			return false
 		}
 		var s = "channels:"
 		for k := range covChans {
@@ -190,6 +190,7 @@ func messageCreate(m *discordgo.MessageCreate, msg []string) {
 		time.Sleep(time.Millisecond * 500)
 		disgobot.Discord.ChannelMessageSend(c.ID, fmt.Sprintf("cronspec: %s", cronSpec))
 	}
+	return false
 }
 
 func covid(country string) (string, error) {

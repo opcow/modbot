@@ -10,7 +10,11 @@ import (
 	"github.com/opcow/disgobot"
 )
 
+type bot string
+
 var (
+	// Bot is the exported bot
+	Bot       bot
 	lastCD    time.Time
 	start     = make(chan int)
 	quit      = make(chan bool)
@@ -29,11 +33,7 @@ var (
 	}
 )
 
-type bot string
-
-var Bot bot
-
-func (b bot) BotInit(s []string) {
+func (b bot) BotInit(s []string) error {
 
 	if len(s) > 1 {
 		_, err := fmt.Sscanf(s[1], "%v", &defaultCD)
@@ -58,13 +58,13 @@ func (b bot) BotInit(s []string) {
 		}
 	}
 	// Tell disgobot where to pass messages for processing
-	disgobot.AddMessageProc(messageProc)
+	return nil
 }
 
 func (b bot) BotExit() {
 }
 
-func messageProc(m *discordgo.MessageCreate, msg []string) {
+func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	if msg[0] == "!cd" {
 		if len(msg) > 1 {
 			var count int
@@ -85,6 +85,7 @@ func messageProc(m *discordgo.MessageCreate, msg []string) {
 			printer(m.ChannelID, defaultCD)
 		}
 	}
+	return false
 }
 
 // countdown printer

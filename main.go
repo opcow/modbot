@@ -1,15 +1,12 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/opcow/disgobot"
@@ -22,17 +19,7 @@ type Config struct {
 }
 
 var (
-	conf   Config
-	lastCD time.Time
-	start  = make(chan int)
-	quit   = make(chan bool)
-
-	seed = rand.NewSource(time.Now().Unix())
-	rnd  = rand.New(seed)
-
-	ctx    context.Context
-	cancel context.CancelFunc
-
+	conf     Config
 	confFile = flag.String("c", "", "config file")
 
 	onOrOff = map[bool]string{
@@ -85,7 +72,7 @@ func main() {
 	for _, p := range conf.Plugins {
 		err := disgobot.LoadPlugin(p)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("Error loading plugin %s: %s\n", p, err)
 		}
 	}
 
