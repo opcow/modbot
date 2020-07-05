@@ -43,6 +43,13 @@ var (
 	calChans      = make(map[string]struct{})
 	reportCron    *cron.Cron
 	cronSpec      = "0 0"
+	bdCommands    = map[string]struct{}{
+		"!bd":        {},
+		"!bday":      {},
+		"!bidet":     {},
+		"!birthday":  {},
+		"!birthdays": {},
+	}
 )
 
 // BotInit() receives args for the bot and returns any error
@@ -102,7 +109,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 		if _, ok := calChans[m.ChannelID]; !ok {
 			return false
 		}
-		if msg[0] == "!bd" {
+		if _, ok := bdCommands[msg[0]]; ok {
 			days := 30
 			if len(msg) > 1 {
 				_, err := fmt.Sscanf(msg[1], "%v", &days)
