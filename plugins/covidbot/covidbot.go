@@ -127,7 +127,7 @@ func (b bot) BotInit(s []string) error {
 	} else {
 		fmt.Printf("%s: error: %s", botName, err)
 	}
-	fmt.Printf("Cronspec is %s\n", cronSpec)
+	fmt.Printf("%s cronspec is %s\n", botName, cronSpec)
 
 	return nil
 }
@@ -147,7 +147,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 		}
 		var err error
 		var report string
-		// lastCD = time.Now()
+
 		if len(msg) > 1 {
 			report, err = covid(strings.Join(msg[1:], "-"))
 		} else {
