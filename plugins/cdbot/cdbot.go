@@ -85,7 +85,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 			printer(m.ChannelID, defaultCD)
 		}
 	}
-	return false
+	return true
 }
 
 // countdown printer

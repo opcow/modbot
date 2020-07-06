@@ -39,7 +39,6 @@ var (
 	calID         string
 	conf          calConf
 	pluginPath    string
-	initialized   bool
 	calChans      = make(map[string]struct{})
 	reportCron    *cron.Cron
 	cronSpec      = "0 0"
@@ -76,14 +75,13 @@ func (b bot) BotInit(s []string) error {
 
 	reportCron = cron.New(cron.WithParser(cron.NewParser(cron.Minute | cron.Hour)))
 	_, err = reportCron.AddFunc(cronSpec, cronReport)
-	if err == nil {
-		reportCron.Start()
-	} else {
+	if err != nil {
 		fmt.Printf("%s: error: %s", botName, err)
+		return err
 	}
+	reportCron.Start()
 	fmt.Printf("%s cronspec is %s\n", botName, cronSpec)
 
-	initialized = true
 	return nil
 }
 
@@ -105,10 +103,7 @@ func cronReport() {
 // messageProc() receives a doscordgo MessageCreate struct and the
 // message content is split into an array of words
 func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
-	if initialized {
-		if _, ok := calChans[m.ChannelID]; !ok {
-			return false
-		}
+	if _, ok := calChans[m.ChannelID]; ok {
 		if _, ok := bdCommands[msg[0]]; ok {
 			days := 30
 			if len(msg) > 1 {
@@ -128,9 +123,8 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 			// } else if msg[0] == "!cal" {
 			// 	disgobot.Discord.ChannelMessageSend(m.ChannelID, "https://calendar.google.com/calendar?cid=aWZ0aWhyYmM2OTZ2aXFobzU2bWc0MWs3ZDhAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ")
 		}
-		return false
 	}
-	return false
+	return true
 }
 
 func readConfig(f string) error {

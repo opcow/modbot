@@ -116,9 +116,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 			}
 		}
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Reactions are %s", onOrOff[doReactions]))
-	}
-
-	if doReactions {
+	} else if doReactions {
 		var match bool
 		for _, v := range reacts {
 			if len(v.Channels) != 0 {
@@ -138,5 +136,5 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 			}
 		}
 	}
-	return false
+	return true
 }

@@ -33,10 +33,8 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	switch strings.ToLower(m.Content) {
 	case "ping":
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, "PONG")
-		return false
 	case "nopongs":
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, "No PONGS for you.")
-		return true
 	}
-	return false
+	return true
 }

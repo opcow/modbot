@@ -39,7 +39,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 			}
 		}
 	}
-	return false
+	return true
 }
 
 func isChan(s string) bool {

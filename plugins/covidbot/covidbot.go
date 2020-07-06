@@ -143,7 +143,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	case "!cov": // report covid-19 stats
 		if time.Now().Sub(lastReport).Seconds() < 10 {
 			disgobot.Discord.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Please wait %.0f seconds and try again.", 10.0-time.Now().Sub(lastReport).Seconds()))
-			return false
+			return true
 		}
 		var err error
 		var report string
@@ -159,7 +159,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	case "!reaper": // periodic USA death toll reports
 		if len(msg) < 2 || msg[1] != "off" {
 			if !disgobot.IsOp(m.Author.ID) {
-				return false
+				return true
 			}
 			if len(msg) == 1 {
 				// just report the status
@@ -178,11 +178,11 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 		}
 	case "!covchans":
 		if !disgobot.IsOp(m.Author.ID) {
-			return false
+			return true
 		}
 		c, err := disgobot.Discord.UserChannelCreate(m.Author.ID)
 		if err != nil {
-			return false
+			return true
 		}
 		var s = "channels:"
 		for k := range covChans {
@@ -192,7 +192,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 		time.Sleep(time.Millisecond * 500)
 		disgobot.Discord.ChannelMessageSend(c.ID, fmt.Sprintf("cronspec: %s", cronSpec))
 	}
-	return false
+	return true
 }
 
 func covid(country string) (string, error) {
