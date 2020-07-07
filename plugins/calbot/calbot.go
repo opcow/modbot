@@ -14,8 +14,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/bwmarrin/discordgo"
+	"github.com/carlescere/scheduler"
 	"github.com/opcow/disgobot"
-	"github.com/robfig/cron/v3"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
@@ -26,7 +26,7 @@ type bot string
 type calConf struct {
 	CalID    string
 	Channels []string
-	Cronspec string
+	Time     string
 }
 
 // Bot is the exported bot
@@ -40,9 +40,10 @@ var (
 	conf          calConf
 	pluginPath    string
 	calChans      = make(map[string]struct{})
-	reportCron    *cron.Cron
-	cronSpec      = "0 0"
-	bdCommands    = map[string]struct{}{
+	// reportCron    *cron.Cron
+	// cronSpec      = "0 0"
+	reportTime = "00:00"
+	bdCommands = map[string]struct{}{
 		"!bd":        {},
 		"!bday":      {},
 		"!bidet":     {},
@@ -73,14 +74,15 @@ func (b bot) BotInit(s []string) error {
 		return err
 	}
 
-	reportCron = cron.New(cron.WithParser(cron.NewParser(cron.Minute | cron.Hour)))
-	_, err = reportCron.AddFunc(cronSpec, cronReport)
+	// reportCron = cron.New(cron.WithParser(cron.NewParser(cron.Minute | cron.Hour)))
+	// _, err = reportCron.AddFunc(cronSpec, cronReport)
+	scheduler.Every().Day().At(reportTime).Run(eventReport)
 	if err != nil {
 		fmt.Printf("%s: error: %s", botName, err)
 		return err
 	}
-	reportCron.Start()
-	fmt.Printf("%s cronspec is %s\n", botName, cronSpec)
+	// reportCron.Start()
+	fmt.Printf("%s report time is %s\n", botName, reportTime)
 
 	return nil
 }
@@ -88,7 +90,7 @@ func (b bot) BotInit(s []string) error {
 func (b bot) BotExit() {
 }
 
-func cronReport() {
+func eventReport() {
 	if len(calChans) > 0 {
 		n, resp := getBirthdaysToday()
 		if n > 0 {
@@ -132,7 +134,8 @@ func readConfig(f string) error {
 	if err == nil {
 		if _, err := toml.Decode(string(tomlData), &conf); err == nil {
 			calID = conf.CalID
-			cronSpec = conf.Cronspec
+			// cronSpec = conf.Cronspec
+			reportTime = conf.Time
 			for _, c := range conf.Channels {
 				calChans[c] = struct{}{}
 			}

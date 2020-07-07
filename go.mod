@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go v0.60.0 // indirect
 	github.com/BurntSushi/toml v0.3.1
 	github.com/bwmarrin/discordgo v0.21.1
+	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82 // indirect
 	github.com/opcow/disgobot v0.0.5
 	github.com/robfig/cron/v3 v3.0.1
 	go.opencensus.io v0.22.4 // indirect
