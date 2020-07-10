@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -177,7 +178,7 @@ func getBirthdays(days int) (int, string) {
 		for _, item := range events.Items {
 			date := item.Start.DateTime
 			if date == "" {
-				date = item.Start.Date
+				date = strings.Replace(item.Start.Date[5:], "-", "/", 1)
 			}
 			b.WriteString(fmt.Sprintf("%v (%v)\n", item.Summary, date))
 		}
