@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -63,7 +62,7 @@ func (b bot) BotInit(s []string) error {
 		return err
 	}
 
-	br, err := ioutil.ReadFile(path.Join(pluginPath, "credentials.json"))
+	br, err := os.ReadFile(path.Join(pluginPath, "credentials.json"))
 	if err != nil {
 		fmt.Printf("Unable to read client secret file: %v", err)
 		return err
@@ -97,7 +96,7 @@ func (b bot) BotExit() {
 }
 
 func readConfig(f string) error {
-	tomlData, err := ioutil.ReadFile(f) // just pass the file name
+	tomlData, err := os.ReadFile(f) // just pass the file name
 	if err == nil {
 		if _, err := toml.Decode(string(tomlData), &conf); err == nil {
 			calID = conf.CalID
@@ -134,14 +133,14 @@ func ripReport() {
 		n, resp := getEventsToday(ripColorID)
 		if n > 0 {
 			for c := range calChans {
-				disgobot.Discord.ChannelMessageSend(c, "Happy RIPday")
+				disgobot.Discord.ChannelMessageSend(c, "Happy Ripday")
 				disgobot.Discord.ChannelMessageSend(c, fmt.Sprintf("```\n%s```", resp))
 			}
-		} else {
-			for c := range calChans {
-				disgobot.Discord.ChannelMessageSend(c, "Happy RIPday")
-				disgobot.Discord.ChannelMessageSend(c, "https://www.youtube.com/watch?v=QPNqojbyIDk")
-			}
+			// } else {
+			// 	for c := range calChans {
+			// 		disgobot.Discord.ChannelMessageSend(c, "Happy Ripday")
+			// 		disgobot.Discord.ChannelMessageSend(c, "https://www.youtube.com/watch?v=QPNqojbyIDk")
+			// 	}
 		}
 	}
 }

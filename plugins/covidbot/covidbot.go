@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -55,6 +56,22 @@ type covidReport struct {
 	Response   []response `json:"response"`
 }
 
+type reportData struct {
+	Recovered  int    `json:"recovered"`
+	Deaths     int    `json:"deaths"`
+	Confirmed  int    `json:"confirmed"`
+	LastCheck  string `json:"lastChecked"`
+	LastReport string `json:"kastReported"`
+	Location   string `json:"location"`
+}
+
+type report struct {
+	Error   bool       `json:"error"`
+	Status  int        `json:"statusCode"`
+	Message string     `json:"message"`
+	Data    reportData `json:"data"`
+}
+
 type config struct {
 	Token    string
 	Chans    []string
@@ -93,7 +110,7 @@ var (
 
 func readConfig(f string) error {
 	fmt.Printf("%s: loading %s...\n", botName, f)
-	tomlData, err := ioutil.ReadFile(f) // just pass the file name
+	tomlData, err := os.ReadFile(f) // just pass the file name
 	if err != nil {
 		fmt.Printf("%s: error: %s", botName, err)
 		return err
@@ -195,7 +212,7 @@ func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	return true
 }
 
-func covid(country string) (string, error) {
+func covidOld(country string) (string, error) {
 
 	var report covidReport
 	var newDeaths string
@@ -211,7 +228,7 @@ func covid(country string) (string, error) {
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	err = json.Unmarshal(body, &report)
 
 	if report.Results < 1 {
@@ -234,14 +251,17 @@ func covid(country string) (string, error) {
 		report.Response[0].Cases.Recovered, report.Response[0].Cases.Total, report.Response[0].Deaths.Total, newDeaths), nil
 }
 
-func reaper() (string, error) {
+func covid(country string) (string, error) {
 
-	var report covidReport
+	var report report
+	// var newDeaths string
+	url := "https://covid-19-coronavirus-statistics.p.rapidapi.com/v1/total?country=" + country
 
-	url := "https://covid-193.p.rapidapi.com/statistics?country=usa"
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("x-rapidapi-host", "covid-193.p.rapidapi.com")
+
+	req.Header.Add("x-rapidapi-host", "covid-19-coronavirus-statistics.p.rapidapi.com")
 	req.Header.Add("x-rapidapi-key", token)
+
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -249,34 +269,61 @@ func reaper() (string, error) {
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	err = json.Unmarshal(body, &report)
 
-	if report.Results < 1 {
-		return "No death count available.", nil
+	if report.Error {
+		return fmt.Sprintf("No results for %s", country), nil
 	}
 
-	t, _ := time.Parse(time.RFC3339, report.Response[0].Time)
-	location, err := time.LoadLocation("America/New_York")
-	var tStr string
-	// var tLoc time.Time
+	return fmt.Sprintf("%v COVID-19 deaths %v", report.Data.Location, report.Data.Deaths), nil
+}
 
-	if err != nil {
-		tStr = report.Response[0].Time
-	} else {
-		tLoc := t.In(location)
-		zone, _ := tLoc.Zone()
-		tStr = tLoc.Format("2006-01-02 @ 15:04 ") + zone
-	}
+func reaper() (string, error) {
 
-	var newDeaths string
-	if report.Response[0].Deaths.New != "" {
-		newDeaths = fmt.Sprintf(". (%s)", report.Response[0].Deaths.New)
-	} else {
-		newDeaths = "."
-	}
+	return covid("US")
 
-	return fmt.Sprintf("USA (%s): %d covid-19 deaths%s\n", tStr, report.Response[0].Deaths.Total, newDeaths), nil
+	// var report covidReport
+
+	// url := "https://covid-193.p.rapidapi.com/statistics?country=usa"
+	// req, _ := http.NewRequest("GET", url, nil)
+	// req.Header.Add("x-rapidapi-host", "covid-193.p.rapidapi.com")
+	// req.Header.Add("x-rapidapi-key", token)
+	// res, err := http.DefaultClient.Do(req)
+
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// defer res.Body.Close()
+	// body, _ := os.ReadAll(res.Body)
+	// err = json.Unmarshal(body, &report)
+
+	// if report.Results < 1 {
+	// 	return "No death count available.", nil
+	// }
+
+	// t, _ := time.Parse(time.RFC3339, report.Response[0].Time)
+	// location, err := time.LoadLocation("America/New_York")
+	// var tStr string
+	// // var tLoc time.Time
+
+	// if err != nil {
+	// 	tStr = report.Response[0].Time
+	// } else {
+	// 	tLoc := t.In(location)
+	// 	zone, _ := tLoc.Zone()
+	// 	tStr = tLoc.Format("2006-01-02 @ 15:04 ") + zone
+	// }
+
+	// var newDeaths string
+	// if report.Response[0].Deaths.New != "" {
+	// 	newDeaths = fmt.Sprintf(". (%s)", report.Response[0].Deaths.New)
+	// } else {
+	// 	newDeaths = "."
+	// }
+
+	// return fmt.Sprintf("USA (%s): %d covid-19 deaths%s\n", tStr, report.Response[0].Deaths.Total, newDeaths), nil
 }
 
 func cronReport() {

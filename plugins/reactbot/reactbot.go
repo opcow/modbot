@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -51,7 +51,7 @@ var (
 )
 
 func readConfig(f string) {
-	tomlData, err := ioutil.ReadFile(f) // just pass the file name
+	tomlData, err := os.ReadFile(f) // just pass the file name
 	if err == nil {
 		if _, err := toml.Decode(string(tomlData), &conf); err == nil {
 			reacts = nil

@@ -31,7 +31,7 @@ func (b bot) BotExit() {
 // message content is split into an array of words
 func (b bot) MessageProc(m *discordgo.MessageCreate, msg []string) bool {
 	switch strings.ToLower(m.Content) {
-	case "ping":
+	case "sober":
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, "PONG")
 	case "nopongs":
 		disgobot.Discord.ChannelMessageSend(m.ChannelID, "No PONGS for you.")

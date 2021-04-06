@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -37,9 +36,9 @@ func readConfig() {
 	var tomlData []byte
 	var err error
 	if *confFile != "" {
-		tomlData, err = ioutil.ReadFile(*confFile)
+		tomlData, err = os.ReadFile(*confFile)
 	} else {
-		tomlData, err = ioutil.ReadFile("modbot.cfg")
+		tomlData, err = os.ReadFile("modbot.cfg")
 	}
 	if err != nil {
 		panic(err)

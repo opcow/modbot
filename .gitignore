@@ -1,7 +1,9 @@
 *.cfg
 *.json
+*.old
 *.so
 *.s
+main
 modbot
 package.sh
 deploy.sh
